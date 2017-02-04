@@ -21,9 +21,14 @@ microbenchmark::microbenchmark(
 )
 
 dict_lex <- dictionary(file='/home/kohei/Documents/Dictionary/Lexicoder/LSDaug2015/LSD2015_NEG.lc3')
-seqs_lex <- tokens(unlist(dict_lex, use.names = FALSE), hash=FALSE, what='fastest')
+seq_lex <- quanteda:::sequence2list(unlist(dict_lex, use.names = FALSE))
+length(seq_lex)
+
+out <- tokens_compound(toks, seq_lex, valuetype='glob', join=TRUE)
+out <- tokens_compound(toks, c('not *'), valuetype='glob', join=TRUE)
 
 profvis::profvis(tokens_compound(tokens(inaugCorpus), seq_lex, valuetype='glob', join=TRUE))
-profvis::profvis(tokens_compound(toks, seqs_lex, valuetype='glob', join=FALSE))
-profvis::profvis(tokens_compound(toks, seqs_lex, valuetype='glob', join=TRUE))
+profvis::profvis(tokens_compound(toks, seq_lex, valuetype='glob', join=FALSE))
+profvis::profvis(tokens_compound(toks, seq_lex, valuetype='glob', join=TRUE))
 
+            
