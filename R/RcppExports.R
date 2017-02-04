@@ -53,6 +53,10 @@ qatd_cpp_tokens_detect <- function(texts_, words_) {
     .Call('quanteda_qatd_cpp_tokens_detect', PACKAGE = 'quanteda', texts_, words_)
 }
 
+qatd_cpp_tokens_dummy <- function(texts_, mode) {
+    .Call('quanteda_qatd_cpp_tokens_dummy', PACKAGE = 'quanteda', texts_, mode)
+}
+
 qatd_cpp_tokens_lookup <- function(texts_, keys_, ids_, overlap) {
     .Call('quanteda_qatd_cpp_tokens_lookup', PACKAGE = 'quanteda', texts_, keys_, ids_, overlap)
 }

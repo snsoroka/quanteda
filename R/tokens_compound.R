@@ -80,11 +80,16 @@ tokens_compound.tokens <- function(x, sequences,
     attrs_org <- attributes(x)
     types <- types(x)
     
+    start <- Sys.time()
     # Convert glob or regex to fixed
     seqs_id <- regex2id(seqs, types, valuetype, case_insensitive)
     if(length(seqs_id) == 0) return(x) # do nothing
-
+    cat("regex2id:", format(Sys.time() - start), "\n")
+    
+    start <- Sys.time()
     x <- qatd_cpp_tokens_compound(x, seqs_id, types, concatenator, join)
+    cat("qatd_cpp_tokens_compound:", format(Sys.time() - start), "\n")
+
     if (!length(attr(x, "types"))){
         attr(x, "types") <- NULL
     } else {
@@ -94,7 +99,10 @@ tokens_compound.tokens <- function(x, sequences,
     x <- reassign_attributes(x, attrs_org, exceptions = "types", attr_only = TRUE)
     attr(x, "concatenator") <- concatenator
     
-    tokens_hashed_recompile(x)
+    start <- Sys.time()
+    x <- tokens_hashed_recompile(x)
+    cat("tokens_hashed_recompile:", format(Sys.time() - start), "\n")
+    return(x)
 }
 
 
