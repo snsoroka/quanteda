@@ -1,5 +1,5 @@
 #include <Rcpp.h>
-#include "dev.h"
+//#include "dev.h"
 #include "quanteda.h"
 
 // [[Rcpp::plugins(cpp11)]]
@@ -10,10 +10,8 @@ using namespace ngrams;
 
 #if RCPP_PARALLEL_USE_TBB
 typedef tbb::concurrent_vector<unsigned int> VecIds;
-typedef tbb::concurrent_unordered_map<std::string, unsigned int> MapTypes;
 #else
 typedef std::vector<unsigned int> VecIds;
-typedef std::std_unordered_map<std::string, unsigned int> MapTypes;
 #endif
 
 struct compile_mt : public Worker{
@@ -49,9 +47,7 @@ List qatd_cpp_recompile(const List &texts_,
     
     Texts texts = Rcpp::as<Texts>(texts_);
     Types types = Rcpp::as<Types>(types_);
-    unsigned int filler = std::numeric_limits<unsigned int>::max(); // use upper limit as a filler
     
-    // Get unique types
     VecIds ids_new(types.size());
     ids_new[0] = 0; // reserved for padding
     unsigned int id_new = 0;
@@ -73,7 +69,7 @@ List qatd_cpp_recompile(const List &texts_,
     
     // Check if types are duplicated
     std::vector<bool> flags_unique(types.size(), false);
-    MapTypes types_unique;
+    std::unordered_map<std::string, unsigned int> types_unique;
     for (std::size_t g = 0; g < types.size(); g++) {
         auto it = types_unique.insert(std::pair<std::string, unsigned int>(types[g], id_new));
         ids_new[g] = it.first->second;
@@ -87,7 +83,7 @@ List qatd_cpp_recompile(const List &texts_,
     }
     bool all_unique = std::all_of(flags_unique.begin(), flags_unique.end(), [](bool v) { return v; });
     
-    // Check gaps and duplicates
+    // Do nothing if no gap or duplicate
     if (all_used && all_unique) return texts_;
 
     // Convert old IDs to new IDs
