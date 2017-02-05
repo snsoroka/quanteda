@@ -102,6 +102,8 @@ tokens_compound.tokens <- function(x, sequences,
     start <- Sys.time()
     x <- tokens_hashed_recompile(x)
     cat("tokens_hashed_recompile:", format(Sys.time() - start), "\n")
+
+    
     return(x)
 }
 
