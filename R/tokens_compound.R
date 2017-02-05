@@ -100,8 +100,12 @@ tokens_compound.tokens <- function(x, sequences,
     attr(x, "concatenator") <- concatenator
     
     start <- Sys.time()
-    x <- tokens_hashed_recompile(x)
+    x1 <- tokens_hashed_recompile(x)
     cat("tokens_hashed_recompile:", format(Sys.time() - start), "\n")
+    
+    start <- Sys.time()
+    x2 <- qatd_cpp_recompile(x, types(x))
+    cat("qatd_cpp_recompile:", format(Sys.time() - start), "\n")
 
     
     return(x)

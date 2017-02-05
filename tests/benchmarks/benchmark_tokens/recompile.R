@@ -10,11 +10,16 @@ attributes(toks2) <- attr_org
 microbenchmark::microbenchmark(
     r=quanteda:::tokens_hashed_recompile(toks2),
     cpp=quanteda:::qatd_cpp_recompile(toks2, attr(toks2, "types")),
+    unique=unique(unlist(toks2, use.names = FALSE)),
     times = 5
 )
 
 r <- quanteda:::tokens_hashed_recompile(toks2)
-cpp <- quanteda:::qatd_cpp_recompile(toks, attr(toks2, "types"))
+cpp <- quanteda:::qatd_cpp_recompile(toks2, attr(toks2, "types"))
 class(cpp) <- 'tokens'
 
-#any(unlist(as.list(r)) != unlist(as.list(cpp)))
+head(toks2[[1]], 10)
+head(cpp[[1]], 10)
+head(r[[1]], 10)
+
+any(unlist(as.list(r)) != unlist(as.list(cpp)))
