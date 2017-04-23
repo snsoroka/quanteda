@@ -71,21 +71,34 @@ struct select_mt : public Worker{
     // parallelFor calles this function with std::size_t
     void operator()(std::size_t begin, std::size_t end){
         //Rcout << "Range " << begin << " " << end << "\n";
-        if (mode == 1) {
-            for (std::size_t h = begin; h < end; h++) {
-                output[h] = keep_token(input[h], spans, set_words, padding);
-            }
-        } else if(mode == 2) {
-            for (std::size_t h = begin; h < end; h++) {
-                output[h] = remove_token(input[h], spans, set_words, padding);
-            }
-        } else {
+        // if (mode == 1) {
+        //     for (std::size_t h = begin; h < end; h++) {
+        //         output[h] = keep_token(input[h], spans, set_words, padding);
+        //     }
+        // } else if(mode == 2) {
+        //     for (std::size_t h = begin; h < end; h++) {
+        //         output[h] = remove_token(input[h], spans, set_words, padding);
+        //     }
+        // } else {
             for (std::size_t h = begin; h < end; h++) {
                 output[h] = input[h];
             }
-        }
+        //}
     }
 };
+
+inline ListOf<IntegerVector> as_tokens(Texts texts){
+    List list(texts.size());
+    for (std::size_t h = 0; h < texts.size(); h++) {
+        //Text text = texts[h];
+        //IntegerVector temp;
+        // if (text.size()) {
+        //     temp = text;
+        // }
+        list[h] = texts[h];
+    }
+    return list;
+}
 
 /* 
  * This funciton select features in tokens object with multiple threads. 
@@ -100,7 +113,7 @@ struct select_mt : public Worker{
  */
 
 // [[Rcpp::export]]
-List qatd_cpp_tokens_select(const List &texts_,
+List qatd_cpp_tokens_select(List &texts_,
                             const CharacterVector types_,
                             const List &words_,
                             int mode,
@@ -109,32 +122,42 @@ List qatd_cpp_tokens_select(const List &texts_,
     Texts input = Rcpp::as<Texts>(texts_);
     Types types = Rcpp::as<Types>(types_);
     
-    SetNgrams set_words;
-    std::vector<std::size_t> spans = register_ngrams(words_, set_words);
+//    SetNgrams set_words;
+//    std::vector<std::size_t> spans = register_ngrams(words_, set_words);
     
     // dev::Timer timer;
-    Texts output(input.size());
+    //Texts output(input.size());
     // dev::start_timer("Token select", timer);
-#if QUANTEDA_USE_TBB
-    select_mt select_mt(input, output, spans, set_words, mode, padding);
-    parallelFor(0, input.size(), select_mt);
-#else
-    if (mode == 1) {
-        for (std::size_t h = 0; h < input.size(); h++) {
-            output[h] = keep_token(input[h], spans, set_words, padding);
-        }
-    } else if(mode == 2) {
-        for (std::size_t h = 0; h < input.size(); h++) {
-            output[h] = remove_token(input[h], spans, set_words, padding);
-        }
-    } else {
-        for (std::size_t h = 0; h < input.size(); h++){
-            output[h] = input[h];
-        }
-    }
-#endif
+// #if QUANTEDA_USE_TBB
+//    select_mt select_mt(input, output, spans, set_words, mode, padding);
+//    parallelFor(0, input.size(), select_mt);
+// #else
+    // if (mode == 1) {
+    //     for (std::size_t h = 0; h < input.size(); h++) {
+    //         output[h] = keep_token(input[h], spans, set_words, padding);
+    //     }
+    // } else if(mode == 2) {
+    //     for (std::size_t h = 0; h < input.size(); h++) {
+    //         output[h] = remove_token(input[h], spans, set_words, padding);
+    //     }
+    // } else {
+        
+        // for (std::size_t h = 0; h < input.size(); h++){
+        //     input[h] = input[h];
+        // }
+
+        //   }
+// #endif
     // dev::stop_timer("Token select", timer);
-    return recompile(output, types);
+    //return recompile(output, types);
+    //input.clear();
+    //input.shrink_to_fit();
+    //texts_ = as_tokens(input);
+    texts_ = wrap(input);
+    //input.clear();
+    //input.shrink_to_fit();
+    
+    return(texts_);
 }
 
 /***R
