@@ -90,12 +90,18 @@ struct select_mt : public Worker{
 inline ListOf<IntegerVector> as_tokens(Texts texts){
     List list(texts.size());
     for (std::size_t h = 0; h < texts.size(); h++) {
-        //Text text = texts[h];
-        //IntegerVector temp;
-        // if (text.size()) {
-        //     temp = text;
-        // }
-        list[h] = texts[h];
+        //std::vector<int> text = texts[h];
+        std::vector<int> text(texts[h].begin(), texts[h].end());
+        texts[h].clear();
+        IntegerVector temp;
+        if (text.size()) {
+            temp = wrap(text);
+            //text.clear();
+            //text.shrink_to_fit();
+        }
+        //IntegerVector temp = wrap(texts[h]);
+        //list[h] = clone(temp);
+        list[h] = text;
     }
     return list;
 }
