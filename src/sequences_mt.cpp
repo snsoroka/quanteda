@@ -240,15 +240,15 @@ struct counts_mt : public Worker{
     
     Texts texts;
     MapNgrams &counts_seq;
-    const unsigned int &len;
+    const std::vector<unsigned int> &sizes;
     const bool &nested;
     
-    counts_mt(Texts texts_, MapNgrams &counts_seq_, const unsigned int &len_, const bool &nested_):
-        texts(texts_), counts_seq(counts_seq_), len(len_), nested(nested_) {}
+    counts_mt(Texts texts_, MapNgrams &counts_seq_, std::vector<unsigned int> &sizes_, const bool &nested_):
+        texts(texts_), counts_seq(counts_seq_), sizes(sizes_), nested(nested_) {}
     
     void operator()(std::size_t begin, std::size_t end){
         for (std::size_t h = begin; h < end; h++){
-            counts(texts[h], counts_seq, len, nested);
+            counts(texts[h], counts_seq, sizes, nested);
         }
     }
 };
@@ -417,18 +417,18 @@ DataFrame qatd_cpp_sequences(const List &texts_,
     VecNgrams seqs_all;
     seqs_all.reserve(len_coe);
     
-    for(unsigned int m = 0; m < sizes.size(); m++){
-        unsigned int mw_len = sizes[m];
+    for(std::size_t g = 0; g < sizes.size(); g++){
+        std::vector<unsigned int> sizes_sub(sizes.begin() + g,  sizes.begin() + g + 1); 
         // Collect all sequences of specified words
         MapNgrams counts_seq;
         //dev::Timer timer;
         //dev::start_timer("Count", timer);
 #if QUANTEDA_USE_TBB
-        counts_mt count_mt(texts, counts_seq, mw_len, nested);
+        counts_mt count_mt(texts, counts_seq, sizes_sub, nested);
         parallelFor(0, texts.size(), count_mt);
 #else
         for (std::size_t h = 0; h < texts.size(); h++) {
-            counts(texts[h], counts_seq, mw_len, nested);
+            counts(texts[h], counts_seq, sizes_sub, nested);
         }
 #endif
         //dev::stop_timer("Count", timer);
