@@ -76,6 +76,81 @@ double compute_dice(const std::vector<double> &counts){
 }
 
 //************************//
+
+
+
+void counts(Text text, 
+            MapNgrams &counts_seq,
+            const std::vector<unsigned int> &sizes,
+            const bool &nested){
+    
+    if (text.size() == 0) return; // do nothing with empty text
+    text.push_back(0); // add padding to include last words
+
+    // Collect sequence of specified types
+    std::size_t len_text = text.size();
+    for (std::size_t size : sizes) {
+        for (std::size_t i = 0; i <= len_text; i++) {
+            if (text[i] == 0) continue;
+            //Rcout << "Size" << size << "\n";
+            if (size > 1 && i + size < len_text) {
+                Text text_sub(text.begin() + i, text.begin() + i + size);
+                if(std::find(text_sub.begin(), text_sub.end(), 0) == text_sub.end()) {
+                    // dev::print_ngram(text_sub);
+                    counts_seq[text_sub]++;
+                }
+                if (!nested) {
+                    i += size - 1;
+                    // Rcout << "Skip" << i + size - 1 << "\n";
+                }
+            }
+        }
+    }
+}
+
+// [[Rcpp::export]]
+DataFrame qatd_cpp_count1(const List &texts_,
+                          const CharacterVector &types_,
+                          const IntegerVector sizes_,
+                          const bool nested){
+    
+    Texts texts = as< Texts >(texts_);
+    std::vector<unsigned int> sizes = as< std::vector<unsigned int> >(sizes_);
+    MapNgrams counts_seq;
+    
+    for (std::size_t h = 0; h < texts.size(); h++) {
+        counts(texts[h], counts_seq, sizes, nested);
+    }
+    
+    std::size_t len = counts_seq.size();
+    VecNgrams seqs;
+    IntParams cs, ns;
+    seqs.reserve(len);
+    cs.reserve(len);
+    
+    for (auto it = counts_seq.begin(); it != counts_seq.end(); ++it) {
+        seqs.push_back(it -> first);
+        cs.push_back(it -> second);
+    }
+    
+    CharacterVector seqs_(seqs.size());
+    for (std::size_t i = 0; i < seqs.size(); i++) {
+        seqs_[i] = join(seqs[i], types_, " ");
+    }
+    
+    DataFrame output_ = DataFrame::create(_["collocation"] = seqs_,
+                                          _["count"] = as<IntegerVector>(wrap(cs)),
+                                          _["stringsAsFactors"] = false);
+    output_.attr("tokens") = as<Tokens>(wrap(seqs));
+    return output_;
+    
+}
+
+// // [[Rcpp::export]]
+// DataFrame qatd_cpp_count2(){
+//     
+// }
+
 void counts(Text text,
            MapNgrams &counts_seq,
            const unsigned int &len,
@@ -111,7 +186,7 @@ void counts(Text text,
                     if (token == 0 || j == len_text){
                         i = j;
                     } else {
-                        i = j-1;
+                        i = j - 1;
                     }
                     //Rcout<<"i="<<i<<"token="<<token<<std::endl;
                 }
@@ -119,6 +194,46 @@ void counts(Text text,
             }
         }
     }
+}
+
+// [[Rcpp::export]]
+DataFrame qatd_cpp_count2(const List &texts_,
+                          const CharacterVector &types_,
+                          const IntegerVector sizes_
+                          ){
+    
+    Texts texts = as< Texts >(texts_);
+    std::vector<unsigned int> sizes = as< std::vector<unsigned int> >(sizes_);
+    MapNgrams counts_seq;
+    
+    for (std::size_t h = 0; h < texts.size(); h++) {
+        for (unsigned int size : sizes) {
+            counts(texts[h], counts_seq, size, false);
+        }
+    }
+    
+    std::size_t len = counts_seq.size();
+    VecNgrams seqs;
+    IntParams cs, ns;
+    seqs.reserve(len);
+    cs.reserve(len);
+    
+    for (auto it = counts_seq.begin(); it != counts_seq.end(); ++it) {
+        seqs.push_back(it -> first);
+        cs.push_back(it -> second);
+    }
+    
+    CharacterVector seqs_(seqs.size());
+    for (std::size_t i = 0; i < seqs.size(); i++) {
+        seqs_[i] = join(seqs[i], types_, " ");
+    }
+    
+    DataFrame output_ = DataFrame::create(_["collocation"] = seqs_,
+                                          _["count"] = as<IntegerVector>(wrap(cs)),
+                                          _["stringsAsFactors"] = false);
+    output_.attr("tokens") = as<Tokens>(wrap(seqs));
+    return output_;
+    
 }
 
 struct counts_mt : public Worker{
@@ -390,7 +505,13 @@ DataFrame qatd_cpp_sequences(const List &texts_,
 /***R
 
 toks <- tokens(data_corpus_inaugural)
-toks <- tokens_select(toks, stopwords("english"), "remove", padding = TRUE)
+types<- attr(toks, 'types')
+#toks <- tokens_select(toks, stopwords("english"), "remove", padding = TRUE)
+# 
+microbenchmark::microbenchmark(
+    qatd_cpp_count1(toks, types, 2:3, FALSE),
+    qatd_cpp_count2(toks, types, 2:3)
+)
 
 #toks <- tokens_select(toks, "^([A-Z][a-z\\-]{2,})", valuetype="regex", case_insensitive = FALSE, padding = TRUE)
 #types <- unique(as.character(toks))
@@ -399,7 +520,39 @@ toks <- tokens_select(toks, stopwords("english"), "remove", padding = TRUE)
 #out4 <- qatd_cpp_sequences(toks, types, 1, 2, 3, "lambda1",0.5, TRUE)
 # out2$z <- out2$lambda / out2$sigma
 # out2$p <- 1 - stats::pnorm(out2$z)
-toks <- tokens('capital other capital gains other capital word2 other gains capital')
-types <- unique(as.character(toks))
-out2 <- qatd_cpp_sequences(toks, types, 1, 2, 2, "lambda1",0.5, TRUE)
+
+toks2 <- tokens('capital other capital gains other capital word2 other gains capital')
+toks2 <- tokens_remove(toks2, 'word2', padding = TRUE)
+types2 <- attr(toks2, 'types')
+#out2 <- qatd_cpp_sequences(toks2, types2, 1, 2, 2, "lambda1",0.5, TRUE)
+
+# no difference
+
+# identical when nested = FLASE
+identical(qatd_cpp_count1(toks2, types2, 2, FALSE),
+          qatd_cpp_count2(toks2, types2, 2))
+
+# identical when nested = FLASE
+identical(qatd_cpp_count1(toks2, types2, 2, FALSE),
+          qatd_cpp_count2(toks2, types2, 2))
+
+identical(qatd_cpp_count1(toks2, types2, 3, FALSE),
+          qatd_cpp_count2(toks2, types2, 3))
+
+identical(qatd_cpp_count1(toks2, types2, 2:3, FALSE),
+          qatd_cpp_count2(toks2, types2, 2:3))
+
+# different when nested = TRUE
+identical(qatd_cpp_count1(toks2, types2, 2, TRUE),
+          qatd_cpp_count2(toks2, types2, 2))
+
+identical(qatd_cpp_count1(toks2, types2, 3, TRUE),
+          qatd_cpp_count2(toks2, types2, 3))
+
+identical(qatd_cpp_count1(toks2, types2, 2:3, TRUE),
+          qatd_cpp_count2(toks2, types2, 2:3))
+
+
+
+
 */
