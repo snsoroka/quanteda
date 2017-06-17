@@ -51,7 +51,7 @@ void estimate(std::size_t i,
         ls[i] = 0;
         return;
     }
-    Rcout << "Estimate " << i << "\n";
+    // Rcout << "Estimate " << i << "\n";
     Ngram ngram = ngrams[i];
     unsigned int count_ngram = counts_ngram[ngram];
     for (unsigned int j = 2; j <= ngram.size(); j++){
@@ -174,5 +174,17 @@ tail(out, 30)
 # 
 # out <- qatd_cpp_sequences_tree(toks2, types2, 1, 2:4)
 # out[order(out$lambda),]
+
+
+load("/home/kohei/Documents/Brexit/Analysis/data_corpus_guardian.RData")
+corp <- corpus_subset(data_corpus_guardian, format(docvars(data_corpus_guardian, 'date'), '%Y') == '2016')
+toks <- tokens(corp)
+toks <- tokens_select(toks, stopwords("english"), "remove", padding = TRUE)
+toks <- tokens_select(toks, '^[A-Z][A-Za-z]', valuetype = 'regex', padding = TRUE, case_insensitive = FALSE)
+toks <- tokens_select(toks, '[\\p{P}]', valuetype = 'regex', "remove", padding = TRUE)
+types<- attr(toks, 'types')
+out <- qatd_cpp_sequences_tree(toks, types, 50, 1:10)
+out <- out[order(out$lambda),]
+tail(out, 50)
 
 */
