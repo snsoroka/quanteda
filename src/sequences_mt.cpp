@@ -91,12 +91,11 @@ void counts(Text text,
     std::size_t len_text = text.size();
     for (std::size_t size : sizes) {
         for (std::size_t i = 0; i <= len_text; i++) {
-            if (text[i] == 0) continue;
             //Rcout << "Size" << size << "\n";
-            if (size > 1 && i + size < len_text) {
-                Text text_sub(text.begin() + i, text.begin() + i + size);
-                if(std::find(text_sub.begin(), text_sub.end(), 0) == text_sub.end()) {
+            if (i + size < len_text) {
+                if (std::find(text.begin() + i, text.begin() + i + size, 0) == text.begin() + i + size) {
                     // dev::print_ngram(text_sub);
+                    Text text_sub(text.begin() + i, text.begin() + i + size);
                     counts_seq[text_sub]++;
                 }
                 if (!nested) {
@@ -505,9 +504,9 @@ DataFrame qatd_cpp_sequences(const List &texts_,
 /***R
 
 toks <- tokens(data_corpus_inaugural)
+toks <- tokens_select(toks, stopwords("english"), "remove", padding = TRUE)
 types<- attr(toks, 'types')
-#toks <- tokens_select(toks, stopwords("english"), "remove", padding = TRUE)
-# 
+ 
 microbenchmark::microbenchmark(
     qatd_cpp_count1(toks, types, 2:3, FALSE),
     qatd_cpp_count2(toks, types, 2:3)
