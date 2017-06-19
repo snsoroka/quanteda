@@ -4,26 +4,44 @@ using namespace quanteda;
 
 
 #if QUANTEDA_USE_TBB
+typedef tbb::concurrent_unordered_map<std::size_t, unsigned int> MapN;
 typedef tbb::concurrent_unordered_map<unsigned int, unsigned int> MapUnigrams;
 typedef tbb::concurrent_unordered_map<Ngram, MapUnigrams, hash_ngram, equal_ngram> TreeNgrams;
 typedef tbb::concurrent_unordered_map<Ngram, double, hash_ngram, equal_ngram> DoubleNgrams;
 #else
+typedef std::unordered_map<std::size_t, unsigned int> MapN;
 typedef std::unordered_map<unsigned int, unsigned int> MapUnigrams;
 typedef std::unordered_map<Ngram, MapUnigrams, hash_ngram, equal_ngram> TreeNgrams;
 typedef std::unordered_map<Ngram, double, hash_ngram, equal_ngram> DoubleNgrams;
 #endif 
 
 double lambda(Ngram &ngram,
-              unsigned int &count_ngram,
+              IntParam &count_ngram,
               IntParam &count_unigram,
+              MapNgrams &counts_ngram,
               MapUnigrams &counts_unigram,
-              TreeNgrams &counts_trail){
+              TreeNgrams &counts_trail,
+              MapN &counts_n){
 
     if (ngram.size() < 2) return 0;
     Ngram ngram_sub(ngram.begin(), ngram.end() - 1);
     unsigned int unigram_sub = ngram.back();
     double l_trail = (double)counts_trail[ngram_sub][unigram_sub] / (double)count_ngram;
     double l_all = (double)counts_unigram[unigram_sub] / (double)count_unigram;
+    
+    //        C     ~C
+    //      +-----+-----+
+    //  (AB)|  x1 |  x3 | N_(AB)
+    //      +-----+-----+
+    // ~(AB)|  x2 |  x4 | N_(~(AB))
+    //      +-----+-----+ 
+    //        N_C   N_~C  N
+    // 
+    // x1 = counts_trail[ngram_sub][unigram_sub]
+    // x2 = count_unigram - x1
+    // x3 = count_ngram[ngram]
+    // x4 = counts_n[ngram.size()] - x2
+    //
     //Rcout << "ngram ";
     //dev::print_ngram(ngram);
     //Rcout << "ngram_sub ";
@@ -39,6 +57,7 @@ void estimate(std::size_t i,
               MapUnigrams &counts_unigram,
               MapNgrams &counts_ngram,
               TreeNgrams &counts_trail,
+              MapN &counts_n,
               DoubleNgrams &lambdas_cache,
               DoubleParams &ls,
               IntParams &cs,
@@ -53,13 +72,14 @@ void estimate(std::size_t i,
     }
     // Rcout << "Estimate " << i << "\n";
     Ngram ngram = ngrams[i];
-    unsigned int count_ngram = counts_ngram[ngram];
+    IntParam count_ngram = counts_ngram[ngram];
     for (unsigned int j = 2; j <= ngram.size(); j++){
         Ngram ngram_sub(ngram.begin(), ngram.begin() + j);
         
         double &lambda_temp = lambdas_cache[ngram_sub];
         if (!lambda_temp){
-            lambda_temp = lambda(ngram_sub, count_ngram, count_unigram, counts_unigram, counts_trail);
+            lambda_temp = lambda(ngram_sub, count_ngram, count_unigram, counts_ngram, 
+                                 counts_unigram, counts_trail, counts_n);
         }
         //Rcout << "lambda_temp " << lambda_temp << "\n";
         if (lambda_temp < 1.0) {
@@ -72,10 +92,11 @@ void estimate(std::size_t i,
 
 void counts(Text text, 
             IntParam &count_unigram,
-             MapUnigrams &counts_unigram,
-             MapNgrams &counts_ngram,
-             TreeNgrams &counts_trail,
-             const std::vector<unsigned int> &sizes){
+            MapUnigrams &counts_unigram,
+            MapNgrams &counts_ngram,
+            TreeNgrams &counts_trail,
+            MapN &counts_n,
+            const std::vector<unsigned int> &sizes){
     
     if (text.size() == 0) return; // do nothing with empty text
     text.push_back(0); // add padding to include last words
@@ -97,6 +118,7 @@ void counts(Text text,
                     //Rcout << "back " << ngram.back() << "\n";
                     counts_ngram[ngram]++;
                     counts_trail[ngram_sub][ngram.back()]++;
+                    counts_n[ngram.size()]++;
                     //Rcout << "counts_trail " << counts_trail[ngram_sub][ngram.back()] << "\n";;
                 }
             }
@@ -113,12 +135,13 @@ DataFrame qatd_cpp_sequences_tree(const List &texts_,
     Texts texts = as< Texts >(texts_);
     std::vector<unsigned int> sizes = as< std::vector<unsigned int> >(sizes_);
     IntParam count_unigram(0);
+    MapN counts_n;
     MapUnigrams counts_unigram;
     MapNgrams counts_ngram;
     TreeNgrams counts_trail;
     
     for (std::size_t h = 0; h < texts.size(); h++) {
-        counts(texts[h], count_unigram, counts_unigram, counts_ngram, counts_trail, sizes);
+        counts(texts[h], count_unigram, counts_unigram, counts_ngram, counts_trail, counts_n, sizes);
     }
     
     std::size_t len = counts_ngram.size();
@@ -139,8 +162,8 @@ DataFrame qatd_cpp_sequences_tree(const List &texts_,
     
     DoubleNgrams lambdas_cache;
     for (size_t i = 0; i < ngrams.size(); i ++) {
-        estimate(i, ngrams, count_unigram, counts_unigram, counts_ngram, counts_trail, lambdas_cache, 
-                 ls, cs, ns, count_min);
+        estimate(i, ngrams, count_unigram, counts_unigram, counts_ngram, counts_trail, counts_n, 
+                 lambdas_cache, ls, cs, ns, count_min);
         R_CheckUserInterrupt();
     }
 
@@ -175,16 +198,16 @@ tail(out, 30)
 # out <- qatd_cpp_sequences_tree(toks2, types2, 1, 2:4)
 # out[order(out$lambda),]
 
-
-load("/home/kohei/Documents/Brexit/Analysis/data_corpus_guardian.RData")
-corp <- corpus_subset(data_corpus_guardian, format(docvars(data_corpus_guardian, 'date'), '%Y') == '2016')
-toks <- tokens(corp)
-toks <- tokens_select(toks, stopwords("english"), "remove", padding = TRUE)
-toks <- tokens_select(toks, '^[A-Z][A-Za-z]', valuetype = 'regex', padding = TRUE, case_insensitive = FALSE)
-toks <- tokens_select(toks, '[\\p{P}]', valuetype = 'regex', "remove", padding = TRUE)
-types<- attr(toks, 'types')
-out <- qatd_cpp_sequences_tree(toks, types, 50, 1:10)
-out <- out[order(out$lambda),]
-tail(out, 50)
+# 
+# load("/home/kohei/Documents/Brexit/Analysis/data_corpus_guardian.RData")
+# corp <- corpus_subset(data_corpus_guardian, format(docvars(data_corpus_guardian, 'date'), '%Y') == '2016')
+# toks <- tokens(corp)
+# toks <- tokens_select(toks, stopwords("english"), "remove", padding = TRUE)
+# toks <- tokens_select(toks, '^[A-Z][A-Za-z]', valuetype = 'regex', padding = TRUE, case_insensitive = FALSE)
+# toks <- tokens_select(toks, '[\\p{P}]', valuetype = 'regex', "remove", padding = TRUE)
+# types<- attr(toks, 'types')
+# out <- qatd_cpp_sequences_tree(toks, types, 50, 1:10)
+# out <- out[order(out$lambda),]
+# tail(out, 50)
 
 */
