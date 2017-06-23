@@ -160,20 +160,45 @@ List qatd_cpp_tokens_select(List &texts_,
     //input.shrink_to_fit();
     //texts_ = as_tokens(input);
     texts_ = wrap(input);
+    //texts_ = as_list(input);
     //input.clear();
     //input.shrink_to_fit();
     
     return(texts_);
 }
 
+
+// [[Rcpp::export]]
+XPtr<Texts> qatd_cpp_tokens(List &texts_){
+    
+    Texts texts = Rcpp::as< Texts >(texts_);
+
+    Texts* texts_pt = new Texts(texts_.size());
+    for (std::size_t i = 0; i < texts_.size(); i++) {
+        texts_pt->push_back(Rcpp::as< Text >(texts_[i]));
+    }
+    Rcpp::XPtr< Texts > texts_pt_(texts_pt, true);
+    return(texts_pt_);
+}
+
 /***R
 
-toks <- list(rep(1:10, 10000), rep(5:15, 10000))
+#toks <- list(rep(1:10, 10000), rep(5:15, 10000))
 #dict <- as.list(1:100000)
-dict <- list(c(1, 2), c(5, 6), 10, 15, 20)
-qatd_cpp_tokens_select(toks, dict, 1, TRUE)
+#dict <- list(c(1, 2), c(5, 6), 10, 15, 20)
+require(quanteda)
+
+toks <- readRDS('/home/kohei/Documents/US Politics/data_tokens_sydney_v2.RDS')
+types <- attr(toks, 'types')
+stopwords_id <- match(stopwords(), types)
+stopwords_id <- stopwords_id[!is.na(stopwords_id)]
+#toks <- tokens_select(toks, stopwords())
+out <- qatd_cpp_tokens_select(unclass(toks), types, stopwords_id, 1, TRUE)
+#gc()
 
 
-
+pt <- qatd_cpp_tokens(toks)
+attr(pt, 'types') <- attr(toks, 'types')
+str(pt)
 
 */

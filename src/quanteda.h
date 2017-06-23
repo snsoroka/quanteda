@@ -78,10 +78,21 @@ namespace quanteda{
         List list(texts.size());
         for (std::size_t h = 0; h < texts.size(); h++) {
             Text text = texts[h];
-            IntegerVector temp = Rcpp::wrap(text);
-            list[h] = temp;
+            if (text.size() > 0) {
+                list[h] = as<IntegerVector>(Rcpp::wrap(text));
+            } else {
+                list[h] = IntegerVector(0);
+            }
         }
         return list;
+    }
+    
+    inline void as_list2(Texts &texts, Tokens &texts_){
+        for (std::size_t h = 0; h < texts.size(); h++) {
+            Text text = texts[h];
+            IntegerVector temp = Rcpp::wrap(text);
+            texts_[h] = temp;
+        }
     }
 
     // Ngram functions and objects -------------------------------------------------------
