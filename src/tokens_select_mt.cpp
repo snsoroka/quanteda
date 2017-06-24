@@ -87,23 +87,28 @@ struct select_mt : public Worker{
     }
 };
 
-inline ListOf<IntegerVector> as_tokens(Texts texts){
-    List list(texts.size());
+inline ListOf<IntegerVector> as_tokens(Texts &texts){
+    List texts_(texts.size());
+    IntegerVector text_;
+    IntegerVector text_epmty_;
+    //IntegerVector text_epmty_ = IntegerVector::create();
     for (std::size_t h = 0; h < texts.size(); h++) {
-        //std::vector<int> text = texts[h];
-        std::vector<int> text(texts[h].begin(), texts[h].end());
-        texts[h].clear();
-        IntegerVector temp;
+        Text &text = texts[h];
+        //std::vector<int> text(texts[h].begin(), texts[h].end());
+        
         if (text.size()) {
-            temp = wrap(text);
+            //text_ = wrap(text);
+            text_ = wrap(text);
+            texts_[h] = text_;
             //text.clear();
             //text.shrink_to_fit();
+        } else {
+            texts_[h] = text_epmty_;
         }
-        //IntegerVector temp = wrap(texts[h]);
-        //list[h] = clone(temp);
-        list[h] = text;
+        
+        text.clear();
     }
-    return list;
+    return texts_;
 }
 
 /* 
@@ -117,6 +122,21 @@ inline ListOf<IntegerVector> as_tokens(Texts texts){
  * @param padding_ fill places where features are removed with zero
  * 
  */
+
+// [[Rcpp::export]]
+List qatd_cpp_tokens_select_old(List &texts_,
+                            const CharacterVector types_,
+                            const List &words_,
+                            int mode,
+                            bool padding){
+    
+    Texts input = Rcpp::as<Texts>(texts_);
+    Types types = Rcpp::as<Types>(types_);
+    
+    texts_ = wrap(input);
+    
+    return(texts_);
+}
 
 // [[Rcpp::export]]
 List qatd_cpp_tokens_select(List &texts_,
@@ -158,8 +178,8 @@ List qatd_cpp_tokens_select(List &texts_,
     //return recompile(output, types);
     //input.clear();
     //input.shrink_to_fit();
-    //texts_ = as_tokens(input);
-    texts_ = wrap(input);
+    texts_ = as_tokens(input);
+    //texts_ = wrap(input);
     //texts_ = as_list(input);
     //input.clear();
     //input.shrink_to_fit();
@@ -168,18 +188,7 @@ List qatd_cpp_tokens_select(List &texts_,
 }
 
 
-// [[Rcpp::export]]
-XPtr<Texts> qatd_cpp_tokens(List &texts_){
-    
-    Texts texts = Rcpp::as< Texts >(texts_);
 
-    Texts* texts_pt = new Texts(texts_.size());
-    for (std::size_t i = 0; i < texts_.size(); i++) {
-        texts_pt->push_back(Rcpp::as< Text >(texts_[i]));
-    }
-    Rcpp::XPtr< Texts > texts_pt_(texts_pt, true);
-    return(texts_pt_);
-}
 
 /***R
 
@@ -188,17 +197,24 @@ XPtr<Texts> qatd_cpp_tokens(List &texts_){
 #dict <- list(c(1, 2), c(5, 6), 10, 15, 20)
 require(quanteda)
 
-toks <- readRDS('/home/kohei/Documents/US Politics/data_tokens_sydney_v2.RDS')
+toks <- readRDS('/home/kohei/Documents/US Politics/data_tokens_nytimes_v2.RDS')
 types <- attr(toks, 'types')
 stopwords_id <- match(stopwords(), types)
 stopwords_id <- stopwords_id[!is.na(stopwords_id)]
 #toks <- tokens_select(toks, stopwords())
-out <- qatd_cpp_tokens_select(unclass(toks), types, stopwords_id, 1, TRUE)
+#out <- qatd_cpp_tokens_select(unclass(toks), types, stopwords_id, 1, TRUE)
 #gc()
 
+for(i in 1:10){
+    print(i)
+    qatd_cpp_tokens_select(unclass(toks), types, stopwords_id, 1, TRUE)
+    gc()
+}
 
-pt <- qatd_cpp_tokens(toks)
-attr(pt, 'types') <- attr(toks, 'types')
-str(pt)
+microbenchmark::microbenchmark(
+    qatd_cpp_tokens_select_old(unclass(toks), types, stopwords_id, 1, TRUE),
+    qatd_cpp_tokens_select(unclass(toks), types, stopwords_id, 1, TRUE),
+    times = 1
+)
 
 */
