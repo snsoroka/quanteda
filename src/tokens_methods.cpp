@@ -16,6 +16,21 @@ XPtr<Texts> qatd_cpp_tokens(List &texts_){
     return(texts_pt_);
 }
 
+// [[Rcpp::export]]
+IntegerVector qatd_cpp_tokens_unlist(XPtr<Texts> texts_pt_)
+{
+    //XPtr<Texts> texts_pt(texts_pt_);
+    Texts texts = *texts_pt_;
+    Rcout << texts.size() << "\n";
+    
+    Text texts_flat;
+    //tokens_flat.reserve(count_match);
+    for (auto &text: texts) {
+        texts_flat.insert(text.end(), text.begin(), text.end());
+    }
+    return texts_flat;
+}
+
 
 // You can include R code blocks in C++ files processed with sourceCpp
 // (useful for testing and development). The R code will be automatically 
