@@ -105,3 +105,19 @@ wordfishcpp_mt <- function(wfm, dirvec, priorvec, tolvec, disptype, dispmin, ABS
     .Call(quanteda_wordfishcpp_mt, wfm, dirvec, priorvec, tolvec, disptype, dispmin, ABS, svd_sparse, residual_floor)
 }
 
+qatd_cpp_xpointer <- function(texts_) {
+    .Call(quanteda_qatd_cpp_xpointer, texts_)
+}
+
+qatd_cpp_tokens <- function(texts_pt_, types_) {
+    .Call(quanteda_qatd_cpp_tokens, texts_pt_, types_)
+}
+
+qatd_cpp_xpointer_unlist <- function(texts_pt_) {
+    .Call(quanteda_qatd_cpp_xpointer_unlist, texts_pt_)
+}
+
+qatd_cpp_xpointer_subset <- function(texts_pt_, index_) {
+    .Call(quanteda_qatd_cpp_xpointer_subset, texts_pt_, index_)
+}
+

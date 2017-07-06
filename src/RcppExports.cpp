@@ -381,3 +381,49 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// qatd_cpp_xpointer
+XPtr<Texts> qatd_cpp_xpointer(List& texts_);
+RcppExport SEXP quanteda_qatd_cpp_xpointer(SEXP texts_SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List& >::type texts_(texts_SEXP);
+    rcpp_result_gen = Rcpp::wrap(qatd_cpp_xpointer(texts_));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qatd_cpp_tokens
+List qatd_cpp_tokens(XPtr<Texts> texts_pt_, CharacterVector types_);
+RcppExport SEXP quanteda_qatd_cpp_tokens(SEXP texts_pt_SEXP, SEXP types_SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< XPtr<Texts> >::type texts_pt_(texts_pt_SEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type types_(types_SEXP);
+    rcpp_result_gen = Rcpp::wrap(qatd_cpp_tokens(texts_pt_, types_));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qatd_cpp_xpointer_unlist
+IntegerVector qatd_cpp_xpointer_unlist(XPtr<Texts> texts_pt_);
+RcppExport SEXP quanteda_qatd_cpp_xpointer_unlist(SEXP texts_pt_SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< XPtr<Texts> >::type texts_pt_(texts_pt_SEXP);
+    rcpp_result_gen = Rcpp::wrap(qatd_cpp_xpointer_unlist(texts_pt_));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qatd_cpp_xpointer_subset
+XPtr<Texts> qatd_cpp_xpointer_subset(XPtr<Texts> texts_pt_, IntegerVector index_);
+RcppExport SEXP quanteda_qatd_cpp_xpointer_subset(SEXP texts_pt_SEXP, SEXP index_SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< XPtr<Texts> >::type texts_pt_(texts_pt_SEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type index_(index_SEXP);
+    rcpp_result_gen = Rcpp::wrap(qatd_cpp_xpointer_subset(texts_pt_, index_));
+    return rcpp_result_gen;
+END_RCPP
+}
