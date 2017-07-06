@@ -60,14 +60,17 @@ IntegerVector qatd_cpp_xpointer_unlist(XPtr<Texts> texts_pt_) {
 
 // [[Rcpp::export]]
 XPtr<Texts> qatd_cpp_xpointer_subset(XPtr<Texts> texts_pt_, IntegerVector index_) {
+    
     Texts texts = *texts_pt_;
     std::vector<int> index = Rcpp::as< std::vector<int> >(index_);
     if (*std::max_element(index.begin(), index.end()) - 1 > (int)texts.size()) {
         throw std::range_error("Invalid index");
     }
-    Texts* texts_sub_pt = new Texts(index.size());
+    //Texts* texts_sub_pt = new Texts(index.size());
+    Texts* texts_sub_pt = new Texts;
     for (int i : index) {
-        (*texts_sub_pt)[i - 1] = texts[i - 1];
+        //(*texts_sub_pt)[i - 1] = texts[i - 1];
+        (*texts_sub_pt).push_back(texts[i - 1]);
     }
     Rcpp::XPtr< Texts > texts_sub_pt_(texts_sub_pt);
     return(texts_sub_pt_);
