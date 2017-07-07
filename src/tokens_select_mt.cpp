@@ -177,7 +177,8 @@ XPtr<Texts> qatd_cpp_xpointer_select(XPtr<Texts> texts_pt_,
     
     tokens_select(texts, types_, words_, mode, padding);
     Texts* texts_sub_pt = new Texts(texts);
-    
+    texts.clear();
+    texts.shrink_to_fit();
     Rcpp::XPtr<Texts> texts_sub_pt_(texts_sub_pt);
     return(texts_sub_pt_);
 }
@@ -189,7 +190,6 @@ toks <- list(rep(1:10, 1))
 #dict <- list(c(1, 2), c(5, 6), 10, 15, 20)
 dict <- list(c(99))
 qatd_cpp_tokens_select(toks, letters, dict, 1, TRUE)
-
 
 
 */
