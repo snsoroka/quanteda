@@ -4,7 +4,6 @@
 #include <algorithm>
 using namespace quanteda;
 
-
 // [[Rcpp::export]]
 XPtr<Texts> qatd_cpp_xpointer(List &texts_) {
     
@@ -32,6 +31,13 @@ List qatd_cpp_tokens(XPtr<Texts> texts_pt_, CharacterVector types_) {
     Texts texts = *texts_pt_;
     Types types = Rcpp::as<Types>(types_);
     return(recompile(texts, types));
+}
+
+// [[Rcpp::export]]
+List qatd_cpp_list(XPtr<Texts> texts_pt_) {
+    
+    Texts texts = *texts_pt_;
+    return(Rcpp::wrap(texts));
 }
 
 // [[Rcpp::export]]
@@ -72,7 +78,8 @@ XPtr<Texts> qatd_cpp_xpointer_subset(XPtr<Texts> texts_pt_, IntegerVector index_
     
     Texts texts = *texts_pt_;
     std::vector<int> index = Rcpp::as< std::vector<int> >(index_);
-    if (*std::max_element(index.begin(), index.end()) - 1 > (int)texts.size()) {
+    if (*std::min_element(index.begin(), index.end()) < 1 ||
+        *std::max_element(index.begin(), index.end()) > (int)texts.size()) {
         throw std::range_error("Invalid index");
     }
     //Texts* texts_sub_pt = new Texts(index.size());
