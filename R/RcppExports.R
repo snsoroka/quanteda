@@ -89,6 +89,10 @@ qatd_cpp_tokens_select <- function(texts_, types_, words_, mode, padding) {
     .Call(quanteda_qatd_cpp_tokens_select, texts_, types_, words_, mode, padding)
 }
 
+qatd_cpp_xpointer_select <- function(texts_pt_, types_, words_, mode, padding) {
+    .Call(quanteda_qatd_cpp_xpointer_select, texts_pt_, types_, words_, mode, padding)
+}
+
 qatd_cpp_chars_remove <- function(input_, char_remove) {
     .Call(quanteda_qatd_cpp_chars_remove, input_, char_remove)
 }
@@ -111,6 +115,10 @@ qatd_cpp_xpointer <- function(texts_) {
 
 qatd_cpp_tokens <- function(texts_pt_, types_) {
     .Call(quanteda_qatd_cpp_tokens, texts_pt_, types_)
+}
+
+qatd_cpp_list <- function(texts_pt_) {
+    .Call(quanteda_qatd_cpp_list, texts_pt_)
 }
 
 qatd_cpp_xpointer_unlist <- function(texts_pt_) {
