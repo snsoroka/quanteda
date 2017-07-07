@@ -117,16 +117,13 @@ struct select_mt : public Worker{
  * 
  */
 
-// [[Rcpp::export]]
-List qatd_cpp_tokens_select(const List &texts_,
-                            const CharacterVector types_,
-                            const List &words_,
-                            int mode,
-                            bool padding){
+void tokens_select(Texts &texts, 
+                    const CharacterVector types_, 
+                    const List &words_,
+                    int mode,
+                    bool padding) {
     
-    Texts texts = Rcpp::as<Texts>(texts_);
     Types types = Rcpp::as<Types>(types_);
-    
     SetNgrams set_words;
     std::vector<std::size_t> spans = register_ngrams(words_, set_words);
     
@@ -150,8 +147,39 @@ List qatd_cpp_tokens_select(const List &texts_,
         }
     }
 #endif
+}
+
+// [[Rcpp::export]]
+List qatd_cpp_tokens_select(const List &texts_,
+                            const CharacterVector types_,
+                            const List &words_,
+                            int mode,
+                            bool padding){
+    
+    Texts texts = Rcpp::as<Texts>(texts_);
+    Types types = Rcpp::as<Types>(types_);
+    
+    tokens_select(texts, types_, words_, mode, padding);
+    
     // dev::stop_timer("Token select", timer);
     return recompile(texts, types, true, false, is_encoded(types_));
+}
+
+// [[Rcpp::export]]
+XPtr<Texts> qatd_cpp_xpointer_select(XPtr<Texts> texts_pt_,
+                                     const CharacterVector types_,
+                                     const List &words_,
+                                     int mode,
+                                     bool padding){
+    
+    Texts texts = *texts_pt_;
+    Types types = Rcpp::as<Types>(types_);
+    
+    tokens_select(texts, types_, words_, mode, padding);
+    Texts* texts_sub_pt = new Texts(texts);
+    
+    Rcpp::XPtr<Texts> texts_sub_pt_(texts_sub_pt);
+    return(texts_sub_pt_);
 }
 
 /***R
@@ -161,7 +189,6 @@ toks <- list(rep(1:10, 1))
 #dict <- list(c(1, 2), c(5, 6), 10, 15, 20)
 dict <- list(c(99))
 qatd_cpp_tokens_select(toks, letters, dict, 1, TRUE)
-
 
 
 
