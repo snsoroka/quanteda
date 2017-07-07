@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <limits>
 #include <algorithm>
+#include "quanteda_types.h"
 
 // [[Rcpp::plugins(cpp11)]]
 using namespace Rcpp;
@@ -24,9 +25,8 @@ using namespace std;
 
 namespace quanteda{
     
+    // Basic type defenitions are in quanteda_types.h
     typedef ListOf<IntegerVector> Tokens;
-    typedef std::vector<unsigned int> Text;
-    typedef std::vector<Text> Texts;
     
 #if QUANTEDA_USE_TBB
     typedef tbb::atomic<int> IntParam;
