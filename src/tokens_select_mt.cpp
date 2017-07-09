@@ -172,15 +172,11 @@ XPtr<Texts> qatd_cpp_xpointer_select(XPtr<Texts> texts_pt_,
                                      int mode,
                                      bool padding){
     
-    Texts texts = *texts_pt_;
+    Texts* texts_pt_new = new Texts((*texts_pt_));
     Types types = Rcpp::as<Types>(types_);
-    
-    tokens_select(texts, types_, words_, mode, padding);
-    Texts* texts_sub_pt = new Texts(texts);
-    texts.clear();
-    texts.shrink_to_fit();
-    Rcpp::XPtr<Texts> texts_sub_pt_(texts_sub_pt);
-    return(texts_sub_pt_);
+    tokens_select((*texts_pt_new), types_, words_, mode, padding);
+    Rcpp::XPtr<Texts> texts_pt_new_(texts_pt_new, true);
+    return(texts_pt_new_);
 }
 
 /***R
