@@ -70,3 +70,36 @@ print.xtokens <- function(x, ...) {
 docnames.xtokens <- function(x) {
     docvars(x, '_docname')
 }
+
+
+#' @method "tokens_select" xtokens
+#' @export
+#' @noRd
+#' @examples 
+#' toks <- tokens(data_corpus_inaugural)
+#' xtoks <- as.xtokens(toks)
+#' head(xtoks)
+#' xtoks2 <- tokens_select(xtoks, stopwords(), padding = TRUE)
+#' head(xtoks2)
+tokens_select.xtokens <- function(x, features, selection = c("keep", "remove"), 
+                                 valuetype = c("glob", "regex", "fixed"),
+                                 case_insensitive = TRUE, padding = FALSE, ...) {
+    
+    selection <- match.arg(selection)
+    valuetype <- match.arg(valuetype)
+    attrs <- attributes(x)
+    
+    types <- types(x)
+    features <- features2list(features)
+    features_id <- regex2id(features, types, valuetype, case_insensitive)
+    
+    if ("" %in% features) features_id <- c(features_id, list(0)) # append padding index
+    
+    if (selection == 'keep') {
+        result <- quanteda:::qatd_cpp_xpointer_select(x, types, features_id, 1, padding)
+    } else {
+        result <- quanteda:::qatd_cpp_xpointer_select(x, types, features_id, 2, padding)
+    }
+    attributes(result, FALSE) <- attrs
+    return(result)
+}
