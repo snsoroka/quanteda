@@ -466,7 +466,7 @@ print.tokens <- function(x, ...) {
                         pos <- tags[pos_id + 1]
                         names(tok) <- pos
                         return(tok)
-                    }, unclass(x), unclass(y))
+                    }, unclass(x), unclass(y), SIMPLIFY = FALSE)
     
     } else {
         x <- lapply(unclass(x), function(tok_id) types[tok_id + 1])
@@ -484,13 +484,18 @@ print.tokens <- function(x, ...) {
 #' str(toks)
 #' toks[c(1,3)]
 "[.tokens" <- function(x, i, ...) {
-    tokens <- unclass(x)[i]
-    if (is.data.frame(attr(x, "docvars"))) {
-        attr(tokens, "docvars") <- attr(x, "docvars")[i,,drop = FALSE]
+    attrs <- attributes(x)
+    x <- unclass(x)[i]
+    if (is.data.frame(attrs$docvars)) {
+        attr(x, "docvars") <- attrs$docvars[i,,drop = FALSE]
     }
-    if (length(tokens) == 1 && is.null(tokens[[1]])) return(tokens)
-    attributes(tokens, FALSE) <- attributes(x)
-    tokens_hashed_recompile(tokens)
+    if (is.list(attrs$annotation)) {
+        y <- unclass(attrs$annotation)[i]
+        attr(y, 'tags') <- tags(attrs$annotation)
+        attr(x, "annotation") <- y
+    }
+    attributes(x, FALSE) <- attrs
+    tokens_recompile(x)
 }
 
 #' @method "[[" tokens
@@ -698,12 +703,12 @@ tokens_character <- function(txt,
 #'                  two = "A B C d"))
 #' attr(toks1, "types") <- char_tolower(attr(toks1, "types"))
 #' unclass(toks1)
-#' unclass(quanteda:::tokens_hashed_recompile(toks1))
+#' unclass(quanteda:::tokens_recompile(toks1))
 #' 
 #' # stemming
 #' toks2 <- tokens("Stemming stemmed many word stems.")
 #' unclass(toks2)
-#' unclass(quanteda:::tokens_hashed_recompile(tokens_wordstem(toks2)))
+#' unclass(quanteda:::tokens_recompile(tokens_wordstem(toks2)))
 #' 
 #' # compounding
 #' toks3 <- tokens("One two three four.")
@@ -723,20 +728,21 @@ tokens_character <- function(txt,
 #' 
 #' @keywords internal tokens
 #' @author Kenneth Benoit and Kohei Watanabe
-tokens_hashed_recompile <- function(x, method = c("C++", "R")) {
+tokens_recompile <- function(x, method = c("C++", "R")) {
     
     method <- match.arg(method)
-    attrs_input <- attributes(x)
+    attrs <- attributes(x)
     
     if (method == "C++") {
         x <- qatd_cpp_tokens_recompile(x, types(x))
-        attributes(x, FALSE) <- attrs_input
+        attributes(x, FALSE) <- attrs
+        class(x) <- c("tokens", "tokenizedTexts")
         return(x)
     }
     
     index_unique <- unique(unlist(unclass(x), use.names = FALSE))
     padding <- (index_unique == 0)
-    attrs_input$padding <- any(padding) # add padding flag
+    attrs$padding <- any(padding) # add padding flag
     index_unique <- index_unique[!padding] # exclude padding
     
     # Remove gaps in the type index, if any, remap index
@@ -745,7 +751,7 @@ tokens_hashed_recompile <- function(x, method = c("C++", "R")) {
         index_new <- c(0, seq_along(index_unique)) # padding index is zero but not in types
         index_unique <- c(0, index_unique) # padding index is zero but not in types
         x <- lapply(unclass(x), function(y) index_new[fastmatch::fmatch(y, index_unique)]) # shift index for padding
-        attributes(x) <- attrs_input
+        attributes(x) <- attrs
         types(x) <- types_new
     }
     
@@ -756,10 +762,11 @@ tokens_hashed_recompile <- function(x, method = c("C++", "R")) {
         index_mapping <- match(types, types_unique)
         index_mapping <- c(0, index_mapping) # padding index is zero but not in types
         x <- lapply(unclass(x), function(y) index_mapping[y + 1]) # shift index for padding
-        attributes(x) <- attrs_input
+        attributes(x) <- attrs
         types(x) <- types_unique
     }
     Encoding(types(x)) <- "UTF-8"
+    class(x) <- c("tokens", "tokenizedTexts")
     return(x)
 }
 
@@ -816,7 +823,7 @@ types.tokens <- function(x) {
     t1 <- c(t1, t2)
     class(t1) <- c('tokens', 'tokenizedTexts')
     types(t1) <- c(types1, types2)
-    tokens_hashed_recompile(t1)
+    tokens_recompile(t1)
 }
 
 #' @rdname as.tokens
