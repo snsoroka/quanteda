@@ -71,7 +71,7 @@ tokens_select_pos.tokens <- function(x, pattern, selection = c("keep", "remove")
                                  valuetype = c("glob", "regex", "fixed"),
                                  case_insensitive = TRUE, padding = FALSE, 
                                  verbose = quanteda_options("verbose"), ...) {
-    if (!has_postags(x))
+    if (!has_annotation(x))
         stop('tokens object must have part-of-speech tags')
     
     selection <- match.arg(selection)
@@ -79,8 +79,8 @@ tokens_select_pos.tokens <- function(x, pattern, selection = c("keep", "remove")
     
     attrs <- attributes(x)
     types <- types(x)
-    y <- attr(x, 'postags')
-    tags <- attr(y, 'tags')
+    y <- annotation(x)
+    tags <- tags(y)
 
     tags_id <- features2id(pattern, tags, valuetype, case_insensitive)
     if ("" %in% pattern) tags_id <- c(tags_id, list(0)) # append padding index
@@ -112,7 +112,7 @@ tokens_select_pos.tokens <- function(x, pattern, selection = c("keep", "remove")
     y <- qatd_cpp_tokens_recompile(base::split(temp$tag, temp$doc), tags)
     attributes(y) <- list('tags' = attr(y, 'types'))
     attributes(x, FALSE) <- attrs
-    attr(x, 'postags') <- y
+    attr(x, 'annotation') <- y
     return(x)
 }
 
@@ -145,13 +145,23 @@ as.tokens.spacyr_parsed <- function(x, concatenator = '_') {
     result <- as.tokens(base::split(x$token, factor(x$doc_id, levels = unique(x$doc_id))))
     temp <- as.tokens(base::split(x$pos, factor(x$doc_id, levels = unique(x$doc_id))))
     attributes(temp) <- list('tags' = attr(temp, 'types'))
-    attr(result, 'postags') <- temp
+    attr(result, 'annotation') <- temp
     return(result)
 }
 
 #' @keywords internal
-has_postags <- function(x) {
-    !is.null(attr(x, 'postags'))
+has_annotation <- function(x) {
+    !is.null(attr(x, 'annotation'))
+}
+
+#' @keywords internal
+annotation <- function(x) {
+    attr(x, 'annotation')
+}
+
+#' @keywords internal
+tags <- function(x) {
+    attr(x, 'tags')
 }
 
 

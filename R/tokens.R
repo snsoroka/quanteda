@@ -457,10 +457,10 @@ print.tokens <- function(x, ...) {
     cat(class(x)[1], " from ", ndoc(x), " document", 
         if (ndoc(x) > 1L) "s" else "", ".\n", sep = "")
     types <- c("", types(x))
-    show_postag <- has_postags(x)
+    show_postag <- has_annotation(x)
     if (show_postag) {
-        y <- attr(x, 'postags')
-        tags <- c("", attr(y, 'tags'))
+        y <- annotation(x)
+        tags <- c("", tags(y))
         x <- mapply(function(tok_id, pos_id) {
                         tok <- types[tok_id + 1]
                         pos <- tags[pos_id + 1]
