@@ -459,15 +459,17 @@ print.tokens <- function(x, ...) {
     types <- c("", types(x))
     show_postag <- has_postags(x)
     if (show_postag) {
-        y <- unclass(attr(x, 'postags'))
+        y <- attr(x, 'postags')
         tags <- c("", attr(y, 'tags'))
-    }
-    #x <- lapply(unclass(x), function(y) types[y + 1]) # shift index to show padding 
-    x <- unclass(x)
-    for (i in seq_len(length(x))) {
-        x[[i]] <- types[x[[i]] + 1]
-        if (show_postag)
-            names(x[[i]]) <- tags[y[[i]] + 1]
+        x <- mapply(function(tok_id, pos_id) {
+                        tok <- types[tok_id + 1]
+                        pos <- tags[pos_id + 1]
+                        names(tok) <- pos
+                        return(tok)
+                    }, unclass(x), unclass(y))
+    
+    } else {
+        x <- lapply(unclass(x), function(tok_id) types[tok_id + 1])
     }
     class(x) <- "listof"
     print(x, ...)
