@@ -136,6 +136,7 @@ Collate:
     'tokens_lookup.R'
     'tokens_ngrams.R'
     'tokens_select.R'
+    'tokens_select_pos.R'
     'tolower-deprecated.R'
     'tolower-functions.R'
     'utils.R'
