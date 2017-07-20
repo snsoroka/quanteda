@@ -110,9 +110,8 @@ tokens_select_pos.tokens <- function(x, pattern, selection = c("keep", "remove")
 
     x <- qatd_cpp_tokens_recompile(base::split(temp$tok, temp$doc), types)
     y <- qatd_cpp_tokens_recompile(base::split(temp$tag, temp$doc), tags)
-    attributes(y) <- list('tags' = attr(y, 'types'))
     attributes(x, FALSE) <- attrs
-    attr(x, 'annotation') <- y
+    attr(x, 'annotation') <- as.annotation(y)
     return(x)
 }
 
@@ -143,9 +142,8 @@ tokens_remove_pos.tokens <- function(x, pattern, valuetype = c("glob", "regex", 
 #' @export
 as.tokens.spacyr_parsed <- function(x, concatenator = '_') {
     result <- as.tokens(base::split(x$token, factor(x$doc_id, levels = unique(x$doc_id))))
-    temp <- as.tokens(base::split(x$pos, factor(x$doc_id, levels = unique(x$doc_id))))
-    attributes(temp) <- list('tags' = attr(temp, 'types'))
-    attr(result, 'annotation') <- temp
+    pos <- as.tokens(base::split(x$pos, factor(x$doc_id, levels = unique(x$doc_id))))
+    attr(result, 'annotation') <- as.annotation(pos)
     return(result)
 }
 
@@ -158,6 +156,13 @@ has_annotation <- function(x) {
 annotation <- function(x) {
     attr(x, 'annotation')
 }
+
+#' @keywords internal
+as.annotation <- function(x) {
+    attributes(x) <- list('tags' = attr(x, 'types'))
+    return(x)
+}
+
 
 #' @keywords internal
 tags <- function(x) {
