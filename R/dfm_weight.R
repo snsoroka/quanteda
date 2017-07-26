@@ -72,10 +72,11 @@ dfm_weight <- function(x,
     UseMethod("dfm_weight")
 }
 
-
-dfm_weight <- function(x, 
-                       type = c("frequency", "relFreq", "relMaxFreq", "logFreq", "tfidf"),
-                       weights = NULL) {
+#' @noRd
+#' @export
+dfm_weight.dfm <- function(x, 
+                           type = c("frequency", "relFreq", "relMaxFreq", "logFreq", "tfidf"),
+                           weights = NULL) {
     # for numeric weights
     if (!is.null(weights)) {
         if (!missing(type)) warning("type is ignored when numeric weights are supplied")
@@ -124,8 +125,12 @@ dfm_weight <- function(x,
 #' # smooth the dfm
 #' dfm_smooth(mydfm, 0.5)
 dfm_smooth <- function(x, smoothing = 1) {
-    if (!is.dfm(x))
-        stop("x must be a dfm object")
+    UseMethod("dfm_smooth")
+}
+
+#' @noRd
+#' @export
+dfm_smooth.dfm <- function(x, smoothing = 1) {
     x + smoothing
 }
 
@@ -184,11 +189,9 @@ docfreq <- function(x, scheme = c("count", "inverse", "inversemax", "inverseprob
 
 #' @noRd
 #' @export
-docfreq <- function(x, scheme = c("count", "inverse", "inversemax", "inverseprob", "unary"),
-                    smoothing = 0, k = 0, base = 10, threshold = 0, USE.NAMES = TRUE) {
-    if (!is.dfm(x))
-        stop("x must be a dfm object")
-    
+docfreq.dfm <- function(x, scheme = c("count", "inverse", "inversemax", "inverseprob", "unary"),
+                        smoothing = 0, k = 0, base = 10, threshold = 0, USE.NAMES = TRUE) {
+
     scheme <- match.arg(scheme)
     args <- as.list(match.call(expand.dots=FALSE))
     if ("base" %in% names(args) & !(substring(scheme, 1, 7) == "inverse"))
@@ -209,9 +212,10 @@ docfreq <- function(x, scheme = c("count", "inverse", "inversemax", "inverseprob
         
     } else if (scheme == "count") {
         if (is(x, "dfmSparse")) {
-            tx <- t(x)
-            featfactor <- factor(tx@i, 0:(nfeature(x)-1), labels = featnames(x))
-            result <- as.integer(table(featfactor[tx@x > threshold]))
+            result <- colSums(x > threshold)
+            # tx <- t(x)
+            # featfactor <- factor(tx@i, 0:(nfeature(x)-1), labels = featnames(x))
+            # result <- as.integer(table(featfactor[tx@x > threshold]))
         } else {
             if (!any(x@x <= threshold)) 
                 result <- rep(ndoc(x), nfeature(x))
@@ -232,7 +236,7 @@ docfreq <- function(x, scheme = c("count", "inverse", "inversemax", "inverseprob
         result <- pmax(0, result)
     }
     
-    if (USE.NAMES) names(result) <- featnames(x)
+    if (USE.NAMES) names(result) <- featnames(x) else names(result) <- NULL
     result
 }
 

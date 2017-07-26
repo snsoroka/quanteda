@@ -2,10 +2,12 @@ context("test quanteda_options")
 
 
 test_that("quanteda_options initialize works correctly", {
+    threads_temp <- getOption("quanteda_threads")
     quanteda_options(verbose = TRUE, threads = 1)
     quanteda_options(initialize = TRUE)
     expect_equal(quanteda_options("threads"), 1)
     expect_equal(quanteda_options("verbose"), TRUE)
+    quanteda_options(threads = threads_temp)
 })
 
 
@@ -47,7 +49,7 @@ test_that("quanteda_options works correctly to set options", {
     )
 })
 
-test_that("quanteda functions work if package is not attached", {
+test_that("quanteda functions work if package is not attached (#864)", {
     skip("skipping test of option setting when quanteda is not attached")
     detach("package:quanteda", unload = TRUE)
     expect_output(

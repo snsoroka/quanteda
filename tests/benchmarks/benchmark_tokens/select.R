@@ -1,9 +1,11 @@
 library(quanteda)
+quanteda_options(threads = 7)
 
 load("/home/kohei/Documents/Brexit/Analysis/data_tokens_guardian.RData")
 toks <- data_tokens_guardian
 
 #toks <- tokens(corpus_subset(data_corpus_guardian, year == 2012))
+
 toks[[1]]
 
 toks2 <- tokens_select(toks, stopwords(), valuetype='fixed')

@@ -181,13 +181,11 @@ test_that("as.list is working", {
     )
 })
 
-test_that("error if empty concatenator is given", {
-    
-    expect_error(dictionary(one = c("a", "b"), two = c("c", "d"), concatenator = ''),
-                 'Concatenator cannot be null or an empty string')
-    
-    # expect_error(dictionary(one = c("a", "b"), two = c("c", "d"), concatenator = NULL),
-    #              'Concatenator cannot be null or an empty string')
+test_that("error if empty separator is given", {
+    expect_error(dictionary(one = c("a", "b"), two = c("c", "d"), separator = ''),
+                 "separator must be a non-empty character")
+    expect_error(dictionary(one = c("a", "b"), two = c("c", "d"), separator = NULL),
+                 "separator must be a non-empty character")
 })
 
 test_that("dictionary woks with the Yoshicoder format", {
@@ -259,4 +257,10 @@ test_that("dictionary constructor works with LIWC format w/extra codes", {
     expect_equal(dict1[order(names(dict1))], dict2[order(names(dict2))])
 })
 
+
+test_that("dictionary works with yoshicoder, issue 819", {
+    expect_equal(
+        as.list(dictionary(file = "../data/dictionaries/issue-819.ykd")),
+        list('Dictionary' = list('pos' = list('A' = 'a word', 'B' = 'b word'))))
+})
 
