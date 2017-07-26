@@ -3,9 +3,10 @@
 #' @export
 as.xtokens <- function(x, ...) {
     docvars(x, '_docname') <- docnames(x)
-    #names(x) <- NULL
+    attrs <- attributes(x)
+    attrs$names <- NULL
     result <- quanteda:::qatd_cpp_xpointer(x)
-    attributes(result) <- attributes(x)
+    attributes(result) <- attrs
     class(result) <- c('xtokens', 'tokens', 'tokenizedTexts')
     return(result)
 }
@@ -81,19 +82,17 @@ docnames.xtokens <- function(x) {
 #' head(xtoks)
 #' xtoks2 <- tokens_select(xtoks, stopwords(), padding = TRUE)
 #' head(xtoks2)
-tokens_select.xtokens <- function(x, features, selection = c("keep", "remove"), 
+tokens_select.xtokens <- function(x, pattern, selection = c("keep", "remove"), 
                                  valuetype = c("glob", "regex", "fixed"),
                                  case_insensitive = TRUE, padding = FALSE, ...) {
     
     selection <- match.arg(selection)
     valuetype <- match.arg(valuetype)
     attrs <- attributes(x)
-    
     types <- types(x)
-    features <- features2list(features)
-    features_id <- regex2id(features, types, valuetype, case_insensitive)
     
-    if ("" %in% features) features_id <- c(features_id, list(0)) # append padding index
+    features_id <- features2id(pattern, types, valuetype, case_insensitive, attr(x, 'concatenator'))
+    if ("" %in% pattern) features_id <- c(features_id, list(0)) # append padding index
     
     if (selection == 'keep') {
         result <- quanteda:::qatd_cpp_xpointer_select(x, types, features_id, 1, padding)
@@ -114,15 +113,15 @@ tokens_select.xtokens <- function(x, features, selection = c("keep", "remove"),
 #' xtoks <- as.xtokens(tokens(txts, remove_punct = TRUE))
 #' 
 #' # for lists of sequence elements
-#' myseqs <- list(c("tax"), c("income", "tax"), c("capital", "gains", "tax"), c("inheritance", "tax"))
-#' (cw <- tokens_compound(mytoks, myseqs))
-#' dfm(cw)
+#' dict <- list(c("tax"), c("income", "tax"), c("capital", "gains", "tax"), c("inheritance", "tax"))
+#' xtoks2 <- tokens_compound(xtoks, dict)
 tokens_compound.xtokens <- function(x, pattern,
                                    concatenator = "_", valuetype = c("glob", "regex", "fixed"),
                                    case_insensitive = TRUE, join = TRUE) {
     
     valuetype <- match.arg(valuetype)
     attrs <- attributes(x)
+    attrs$names <- NULL
     types <- types(x)
     
     seqs_id <- features2id(pattern, types, valuetype, case_insensitive, remove_unigram = TRUE)

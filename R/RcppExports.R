@@ -41,12 +41,12 @@ qatd_cpp_fcm <- function(texts_, n_types, count, window, weights, ordered, tri, 
     .Call(`_quanteda_qatd_cpp_fcm`, texts_, n_types, count, window, weights, ordered, tri, nvec)
 }
 
-qatd_cpp_sequences_old <- function(texts_, words_, types_, count_min, len_max, nested, ordered = FALSE) {
-    .Call(`_quanteda_qatd_cpp_sequences_old`, texts_, words_, types_, count_min, len_max, nested, ordered)
-}
-
 qatd_cpp_sequences <- function(texts_, types_, count_min, sizes_, method, smoothing) {
     .Call(`_quanteda_qatd_cpp_sequences`, texts_, types_, count_min, sizes_, method, smoothing)
+}
+
+qatd_cpp_sequences_old <- function(texts_, words_, types_, count_min, len_max, nested, ordered = FALSE) {
+    .Call(`_quanteda_qatd_cpp_sequences_old`, texts_, words_, types_, count_min, len_max, nested, ordered)
 }
 
 qatd_cpp_tokens_compound <- function(texts_, comps_, types_, delim_, join) {
@@ -101,6 +101,10 @@ qatd_cpp_tbb_enabled <- function() {
     .Call(`_quanteda_qatd_cpp_tbb_enabled`)
 }
 
+wordfishcpp <- function(wfm, dirvec, priorvec, tolvec, disptype, dispmin, ABS, svd_on, residual_floor) {
+    .Call(`_quanteda_wordfishcpp`, wfm, dirvec, priorvec, tolvec, disptype, dispmin, ABS, svd_on, residual_floor)
+}
+
 wordfishcpp_dense <- function(wfm, dir, priors, tol, disp, dispfloor, abs_err) {
     .Call(`_quanteda_wordfishcpp_dense`, wfm, dir, priors, tol, disp, dispfloor, abs_err)
 }
@@ -109,7 +113,6 @@ wordfishcpp_mt <- function(wfm, dirvec, priorvec, tolvec, disptype, dispmin, ABS
     .Call(`_quanteda_wordfishcpp_mt`, wfm, dirvec, priorvec, tolvec, disptype, dispmin, ABS, svd_sparse, residual_floor)
 }
 
-<<<<<<< HEAD
 qatd_cpp_xpointer <- function(texts_) {
     .Call(`_quanteda_qatd_cpp_xpointer`, texts_)
 }
@@ -128,9 +131,5 @@ qatd_cpp_xpointer_unlist <- function(texts_pt_) {
 
 qatd_cpp_xpointer_subset <- function(texts_pt_, index_) {
     .Call(`_quanteda_qatd_cpp_xpointer_subset`, texts_pt_, index_)
-=======
-wordfishcpp <- function(wfm, dirvec, priorvec, tolvec, disptype, dispmin, ABS, svd_on, residual_floor) {
-    .Call(`_quanteda_wordfishcpp`, wfm, dirvec, priorvec, tolvec, disptype, dispmin, ABS, svd_on, residual_floor)
->>>>>>> master
 }
 
