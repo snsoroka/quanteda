@@ -51,14 +51,14 @@ setClass("textmodel_wordscores_predicted",
 #'   \code{\link{predict.textmodel_wordscores_fitted}}.
 #' @author Kenneth Benoit
 #' @examples 
-#' (ws <- textmodel_wordscores(data_dfm_LBGexample, c(seq(-1.5, 1.5, .75), NA)))
+#' (ws <- textmodel_wordscores(data_dfm_lbgexample, c(seq(-1.5, 1.5, .75), NA)))
 #' 
 #' predict(ws)
 #' predict(ws, rescaling = "mv")
 #' predict(ws, rescaling = "lbg")
 #' 
 #' # same as:
-#' (ws2 <- textmodel_wordscores(data_dfm_LBGexample, c(seq(-1.5, 1.5, .75), NA)))
+#' (ws2 <- textmodel_wordscores(data_dfm_lbgexample, c(seq(-1.5, 1.5, .75), NA)))
 #' predict(ws2)
 #' @references Laver, Michael, Kenneth R Benoit, and John Garry. 2003. 
 #'   "Extracting Policy Positions From Political Texts Using Words as Data." 
@@ -257,7 +257,7 @@ print.textmodel_wordscores_fitted <- function(x, n=30L, digits=2, ...) {
     refscores <- data.frame(Documents=docnames(x@x),
                             "Ref scores" = x@y)
     refscores$Ref.scores <- format(refscores$Ref.scores, digits=digits)
-    refscores$Ref.scores[grep("NA", refscores$Ref.scores)] <- "."
+    refscores$Ref.scores[stri_detect_fixed(refscores$Ref.scores, "NA")] <- "."
     names(refscores)[2] <- "Ref scores"
     print(refscores, row.names=FALSE, digits=digits)
     cat("\nWord scores: ")
