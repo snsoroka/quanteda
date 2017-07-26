@@ -149,49 +149,22 @@ struct compound_mt : public Worker{
     }
 };
 
-/* 
- * This funciton substitutes features in tokens object with new IDs. 
- * The number of threads is set by RcppParallel::setThreadOptions()
- * @used tokens_compound()
- * @creator Kohei Watanabe
- * @param texts_ tokens ojbect
- * @param comps_ list of features to substitute
- * @param ids_ IDs to be placed after substitution
- * @param join join overlapped features if true
- * 
- */
 
-// [[Rcpp::export]]
-List qatd_cpp_tokens_compound(const List &texts_, 
-                              const List &comps_,
-                              const CharacterVector &types_,
-                              const String &delim_,
-                              const bool &join){
+void tokens_compound(Texts &texts,
+                     Types &types,
+                     const List &comps_,
+                     const String &delim_,
+                     const bool &join) {
     
-    Texts texts = Rcpp::as<Texts>(texts_);
-    Types types = Rcpp::as<Types>(types_);
     std::string delim = delim_;
-
-    unsigned int id_last = types.size();
-    #if QUANTEDA_USE_TBB
-    IdNgram id_comp(id_last);
-    #else
-    IdNgram id_comp = id_last;
-    #endif
     
-/*
-    MapNgrams map_comps;
-    std::vector<std::size_t> spans(comps_.size());
-    for (unsigned int g = 0; g < (unsigned int)comps_.size(); g++) {
-        if (has_na(comps_[g])) continue;
-        Ngram comp = comps_[g];
-        map_comps[comp] = ++id_comp;
-        spans[g] = comp.size();
-    }
-    sort(spans.begin(), spans.end());
-    spans.erase(unique(spans.begin(), spans.end()), spans.end());
-    std::reverse(std::begin(spans), std::end(spans));
-*/    
+    unsigned int id_last = types.size();
+#if QUANTEDA_USE_TBB
+    IdNgram id_comp(id_last);
+#else
+    IdNgram id_comp = id_last;
+#endif
+
     
     MapNgrams map_comps;
     map_comps.max_load_factor(GLOBAL_PATTERNS_MAX_LOAD_FACTOR);
@@ -205,7 +178,7 @@ List qatd_cpp_tokens_compound(const List &texts_,
     sort(spans.begin(), spans.end());
     spans.erase(unique(spans.begin(), spans.end()), spans.end());
     std::reverse(std::begin(spans), std::end(spans));
-     
+    
     // dev::Timer timer;
     // dev::start_timer("Token compound", timer);
 #if QUANTEDA_USE_TBB
@@ -243,8 +216,49 @@ List qatd_cpp_tokens_compound(const List &texts_,
     }
     types.insert(types.end(), types_comp.begin(), types_comp.end());
     
+}
+
+/* 
+ * This funciton substitutes features in tokens object with new IDs. 
+ * The number of threads is set by RcppParallel::setThreadOptions()
+ * @used tokens_compound()
+ * @creator Kohei Watanabe
+ * @param texts_ tokens ojbect
+ * @param comps_ list of features to substitute
+ * @param ids_ IDs to be placed after substitution
+ * @param join join overlapped features if true
+ * 
+ */
+
+// [[Rcpp::export]]
+List qatd_cpp_tokens_compound(const List &texts_, 
+                              const List &comps_,
+                              const CharacterVector &types_,
+                              const String &delim_,
+                              const bool &join){
+    
+    Texts texts = Rcpp::as<Texts>(texts_);
+    Types types = Rcpp::as<Types>(types_);
+    
+    tokens_compound(texts, types, comps_, delim_, join);
+    
     // dev::stop_timer("Token compound", timer);
     return recompile(texts, types, true, true, is_encoded(delim_) || is_encoded(types_));
+}
+
+// [[Rcpp::export]]
+XPtr<Texts> qatd_cpp_xpointer_compound(XPtr<Texts> texts_pt_,
+                                       const List &comps_,
+                                       const CharacterVector &types_,
+                                       const String &delim_,
+                                       const bool &join){
+    
+    Texts* texts_pt_new = new Texts((*texts_pt_));
+    Types types = Rcpp::as<Types>(types_);
+    tokens_compound((*texts_pt_new), types, comps_, delim_, join);
+    Rcpp::XPtr<Texts> texts_pt_new_(texts_pt_new, true);
+    texts_pt_new_.attr("types") = as<CharacterVector>(wrap(types));
+    return(texts_pt_new_);
 }
 
 /***R
@@ -253,7 +267,7 @@ toks <- list(rep(1:10, 1), rep(5:15, 1))
 #dict <- list(c(1, 2), c(3, 4))
 dict <- list(c(1, 2), c(1, 2, 3))
 #dict <- list(c(1, 2), c(2, 3), c(4, 5))
-types <- letters[seq_along(unique(unlist(toks)))]
+types <- letters
 #qatd_cpp_tokens_compound(toks, dict, types, "_", FALSE)
 qatd_cpp_tokens_compound(toks, dict, types, "_", TRUE)
 

@@ -3,7 +3,7 @@
 #' @export
 as.xtokens <- function(x, ...) {
     docvars(x, '_docname') <- docnames(x)
-    names(x) <- NULL
+    #names(x) <- NULL
     result <- quanteda:::qatd_cpp_xpointer(x)
     attributes(result) <- attributes(x)
     class(result) <- c('xtokens', 'tokens', 'tokenizedTexts')
@@ -33,7 +33,7 @@ print.xtokens <- function(x, ...) {
 #' @noRd
 #' @examples 
 #' toks <- tokens(c(d1 = "one two three", d2 = "four five six", d3 = "seven eight"))
-#' xpt <- as.xtokens(toks)
+#' xtoks <- as.xtokens(toks)
 #' str(xpt)
 #' xpt[c(1,3)]
 "[.xtokens" <- function(x, i, ...) {
@@ -102,4 +102,33 @@ tokens_select.xtokens <- function(x, features, selection = c("keep", "remove"),
     }
     attributes(result, FALSE) <- attrs
     return(result)
+}
+
+#' @rdname tokens_compound
+#' @noRd
+#' @importFrom RcppParallel RcppParallelLibs
+#' @export
+#' @examples
+#' txts <- c("The new law included a capital gains tax, and an inheritance tax.",
+#'              "New York City has raised taxes: an income tax and inheritance taxes.")
+#' xtoks <- as.xtokens(tokens(txts, remove_punct = TRUE))
+#' 
+#' # for lists of sequence elements
+#' myseqs <- list(c("tax"), c("income", "tax"), c("capital", "gains", "tax"), c("inheritance", "tax"))
+#' (cw <- tokens_compound(mytoks, myseqs))
+#' dfm(cw)
+tokens_compound.xtokens <- function(x, pattern,
+                                   concatenator = "_", valuetype = c("glob", "regex", "fixed"),
+                                   case_insensitive = TRUE, join = TRUE) {
+    
+    valuetype <- match.arg(valuetype)
+    attrs <- attributes(x)
+    types <- types(x)
+    
+    seqs_id <- features2id(pattern, types, valuetype, case_insensitive, remove_unigram = TRUE)
+    if (length(seqs_id) == 0) return(x) # do nothing
+    x <- qatd_cpp_xpointer_compound(x, seqs_id, types, concatenator, join)
+    attributes(x, FALSE) <- attrs
+    attr(x, "concatenator") <- concatenator
+    return(x)
 }

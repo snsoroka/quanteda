@@ -53,6 +53,10 @@ qatd_cpp_tokens_compound <- function(texts_, comps_, types_, delim_, join) {
     .Call(`_quanteda_qatd_cpp_tokens_compound`, texts_, comps_, types_, delim_, join)
 }
 
+qatd_cpp_xpointer_compound <- function(texts_pt_, comps_, types_, delim_, join) {
+    .Call(`_quanteda_qatd_cpp_xpointer_compound`, texts_pt_, comps_, types_, delim_, join)
+}
+
 qatd_cpp_tokens_detect <- function(texts_, words_) {
     .Call(`_quanteda_qatd_cpp_tokens_detect`, texts_, words_)
 }
@@ -86,7 +90,7 @@ qatd_cpp_tokens_select <- function(texts_, types_, words_, mode, padding) {
 }
 
 qatd_cpp_xpointer_select <- function(texts_pt_, types_, words_, mode, padding) {
-    .Call(quanteda_qatd_cpp_xpointer_select, texts_pt_, types_, words_, mode, padding)
+    .Call(`_quanteda_qatd_cpp_xpointer_select`, texts_pt_, types_, words_, mode, padding)
 }
 
 qatd_cpp_chars_remove <- function(input_, char_remove) {
@@ -110,22 +114,22 @@ wordfishcpp_mt <- function(wfm, dirvec, priorvec, tolvec, disptype, dispmin, ABS
 }
 
 qatd_cpp_xpointer <- function(texts_) {
-    .Call(quanteda_qatd_cpp_xpointer, texts_)
+    .Call(`_quanteda_qatd_cpp_xpointer`, texts_)
 }
 
 qatd_cpp_tokens <- function(texts_pt_, types_) {
-    .Call(quanteda_qatd_cpp_tokens, texts_pt_, types_)
+    .Call(`_quanteda_qatd_cpp_tokens`, texts_pt_, types_)
 }
 
 qatd_cpp_list <- function(texts_pt_) {
-    .Call(quanteda_qatd_cpp_list, texts_pt_)
+    .Call(`_quanteda_qatd_cpp_list`, texts_pt_)
 }
 
 qatd_cpp_xpointer_unlist <- function(texts_pt_) {
-    .Call(quanteda_qatd_cpp_xpointer_unlist, texts_pt_)
+    .Call(`_quanteda_qatd_cpp_xpointer_unlist`, texts_pt_)
 }
 
 qatd_cpp_xpointer_subset <- function(texts_pt_, index_) {
-    .Call(quanteda_qatd_cpp_xpointer_subset, texts_pt_, index_)
+    .Call(`_quanteda_qatd_cpp_xpointer_subset`, texts_pt_, index_)
 }
 

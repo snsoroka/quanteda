@@ -118,12 +118,11 @@ struct select_mt : public Worker{
  */
 
 void tokens_select(Texts &texts, 
-                    const CharacterVector types_, 
-                    const List &words_,
-                    int mode,
-                    bool padding) {
+                   Types &types, 
+                   const List &words_,
+                   int mode,
+                   bool padding) {
     
-    Types types = Rcpp::as<Types>(types_);
     SetNgrams set_words;
     std::vector<std::size_t> spans = register_ngrams(words_, set_words);
     
@@ -159,7 +158,7 @@ List qatd_cpp_tokens_select(const List &texts_,
     Texts texts = Rcpp::as<Texts>(texts_);
     Types types = Rcpp::as<Types>(types_);
     
-    tokens_select(texts, types_, words_, mode, padding);
+    tokens_select(texts, types, words_, mode, padding);
     
     // dev::stop_timer("Token select", timer);
     return recompile(texts, types, true, false, is_encoded(types_));
@@ -174,8 +173,9 @@ XPtr<Texts> qatd_cpp_xpointer_select(XPtr<Texts> texts_pt_,
     
     Texts* texts_pt_new = new Texts((*texts_pt_));
     Types types = Rcpp::as<Types>(types_);
-    tokens_select((*texts_pt_new), types_, words_, mode, padding);
+    tokens_select((*texts_pt_new), types, words_, mode, padding);
     Rcpp::XPtr<Texts> texts_pt_new_(texts_pt_new, true);
+    texts_pt_new_.attr("types") = as<CharacterVector>(wrap(types));
     return(texts_pt_new_);
 }
 
@@ -185,7 +185,7 @@ toks <- list(rep(1:10, 1))
 #dict <- as.list(1:100000)
 #dict <- list(c(1, 2), c(5, 6), 10, 15, 20)
 dict <- list(c(99))
-qatd_cpp_tokens_select(toks, letters, dict, 1, TRUE)
+qatd_cpp_tokens_select(toks, letters, dict, 2, TRUE)
 
 
 */
